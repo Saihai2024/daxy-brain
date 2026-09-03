@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>登录 · 认知大脑控制台</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #09090b;
+  --surface: #0c0c0f;
+  --border: #1f1f23;
+  --border-strong: #2c2c30;
+  --fg: #fafafa;
+  --fg-2: #a1a1aa;
+  --fg-3: #71717a;
+  --brand: #a78bfa;
+  --brand-2: #818cf8;
+  --brand-bg: rgba(167, 139, 250, 0.12);
+  --brand-border: rgba(167, 139, 250, 0.3);
+  --red: #ef4444;
+  --red-bg: rgba(239, 68, 68, 0.1);
+  --font: "Inter", -apple-system, "PingFang SC", "HarmonyOS Sans", "Microsoft YaHei", "Segoe UI", sans-serif;
+}
+html, body { height: 100%; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image:
+    radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.08), transparent 40%),
+    radial-gradient(circle at 100% 100%, rgba(168, 85, 247, 0.06), transparent 40%);
+  -webkit-font-smoothing: antialiased;
+}
+.login-card {
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 36px 32px 32px;
+  box-shadow: 0 16px 32px rgba(0,0,0,0.5);
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.logo-mark {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.logo h1 { font-size: 17px; font-weight: 600; letter-spacing: 0.2px; }
+.subtitle { color: var(--fg-3); font-size: 12.5px; margin-bottom: 26px; }
+.field { margin-bottom: 16px; }
+.field label {
+  display: block;
+  font-size: 12px;
+  color: var(--fg-2);
+  margin-bottom: 6px;
+}
+.field input {
+  width: 100%;
+  background: #111114;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--fg);
+  font-size: 14px;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.field input:focus {
+  border-color: var(--brand-border);
+  box-shadow: 0 0 0 3px var(--brand-bg);
+}
+.btn-login {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 0;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  color: #0b0b10;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.05s;
+}
+.btn-login:hover { opacity: 0.92; }
+.btn-login:active { transform: translateY(1px); }
+.btn-login:disabled { opacity: 0.55; cursor: wait; }
+.error {
+  display: none;
+  margin-bottom: 16px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: var(--red-bg);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--red);
+  font-size: 12.5px;
+}
+.error.show { display: block; }
+</style>
+</head>
+<body>
+  <form class="login-card" id="login-form">
+    <div class="logo">
+      <div class="logo-mark">🧠</div>
+      <h1>认知大脑控制台</h1>
+    </div>
+    <div class="subtitle">请登录后访问仪表盘</div>
+    <div class="error" id="error-box">账号或密码错误</div>
+    <div class="field">
+      <label for="username">账号</label>
+      <input id="username" name="username" autocomplete="username" autofocus required>
+    </div>
+    <div class="field">
+      <label for="password">密码</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required>
+    </div>
+    <button class="btn-login" id="btn-login" type="submit">登 录</button>
+  </form>
+
+<script>
+const form = document.getElementById("login-form");
+const errBox = document.getElementById("error-box");
+const btn = document.getElementById("btn-login");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  errBox.classList.remove("show");
+  btn.disabled = true;
+  btn.textContent = "登录中…";
+  try {
+    const resp = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: document.getElementById("username").value.trim(),
+        password: document.getElementById("password").value,
+      }),
+    });
+    if (resp.ok) {
+      location.href = "/";
+      return;
+    }
+    const data = await resp.json().catch(() => ({}));
+    errBox.textContent = data.detail || "账号或密码错误";
+    errBox.classList.add("show");
+  } catch (err) {
+    errBox.textContent = "网络错误,请重试";
+    errBox.classList.add("show");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "登 录";
+  }
+});
+</script>
+</body>
+</html>

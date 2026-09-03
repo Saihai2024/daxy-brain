@@ -1,0 +1,44 @@
+# ---- 凭据 ----
+.env
+env.local.bat
+webapp/.session_secret
+
+# ---- 模型与数据(动辄几百 MB 到几 GB,不进仓库)----
+*.pkl
+*.pkl.*
+*.model
+*.bin
+*.vec
+*.ckpt
+*/models/
+corpus/
+db/data/
+
+# ---- 运行产物 ----
+logs/
+*.log
+*.out
+browser_cookies/
+tmp/
+temp/
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# ---- 编辑器 / 系统 ----
+.idea/
+.vscode/
+.claude/
+.DS_Store
+Thumbs.db
+
+# ---- 备份 ----
+*.bak
+*.bak-*
+*.orig
