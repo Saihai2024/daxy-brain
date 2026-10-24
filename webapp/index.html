@@ -1241,6 +1241,10 @@ td.time-cell { color: var(--fg-3); font-family: var(--font-mono); font-size: 11.
     <div class="nav-group">
       <div class="nav-group-title">大脑</div>
       <nav class="nav">
+        <div class="nav-item" data-tab="agi">
+          <svg class="ico"><use href="#i-brain"/></svg><span>AGI 认知中枢</span>
+          <span class="count" id="nav-agi">V20</span>
+        </div>
         <div class="nav-item" data-tab="memory">
           <svg class="ico"><use href="#i-database"/></svg><span>记忆库</span>
           <span class="count" id="nav-mem">—</span>
@@ -1583,6 +1587,76 @@ td.time-cell { color: var(--fg-3); font-family: var(--font-mono); font-size: 11.
           </section>
         </div>
       </div>
+
+      <!-- ====== 大兮 AGI 认知中枢 ====== -->
+      <div class="panel" id="panel-agi">
+        <div class="page-title-row">
+          <div>
+            <div class="page-title">大兮 AGI 认知中枢 (V20)</div>
+            <div class="page-subtitle">非 Transformer 阴阳双态 DAO · 三因子睡眠巩固 · 一次经验机制迁移 · 万物皆可图多模态图谱 · GWT/EVC/Lyapunov · 多智能体社会 · 惊奇驱动多源互证学习</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn" onclick="loadAgiCenter()"><svg class="ico ico-sm"><use href="#i-refresh"/></svg>刷新状态</button>
+            <button class="btn" onclick="runAgiSleep()"><svg class="ico ico-sm"><use href="#i-sparkles"/></svg>执行睡眠巩固</button>
+          </div>
+        </div>
+
+        <div class="stat-grid" id="agi-stat-cards" style="margin-bottom:16px"></div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px;margin-bottom:16px;">
+          <!-- 1. 惊奇驱动自主多源采集与认知免疫入脑 -->
+          <div class="card" style="padding:16px;">
+            <div class="card-title" style="margin-bottom:4px;">惊奇驱动多源互证采集 (A8)</div>
+            <div class="card-desc" style="margin-bottom:12px;">多源百科/arXiv/搜索引擎并发拉取 → 跨源语义重叠互证 → 认知免疫过滤 → 图谱与双脑同步织入</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <input class="input" id="agi-acq-topic" placeholder="输入未知概念主题，例如：拓扑量子计算" value="拓扑量子计算">
+              <textarea class="input" id="agi-acq-content" rows="3" placeholder="可选：直接投喂自定义权威知识段落（留空则自动触发多源网络采集与互证）">拓扑量子计算利用非阿贝尔任意子（Non-Abelian Anyons）的编织操作（Braiding）在拓扑简并基态流形上实现量子逻辑门。由于量子信息编码在全局拓扑不变量中，局部环境微扰不会破坏相干性，因此具备内禀容错能力，为突破退相干瓶颈提供了物理层面的保护。</textarea>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-primary" onclick="runAgiAcquire(false)">投喂/互证入脑</button>
+                <button class="btn" onclick="runAgiAcquire(true)">全网多源抓取互证</button>
+              </div>
+              <pre id="agi-acq-out" style="margin:6px 0 0;padding:10px;background:var(--bg-2);border-radius:6px;font-size:11px;max-height:180px;overflow:auto;white-space:pre-wrap;">等待执行...</pre>
+            </div>
+          </div>
+
+          <!-- 2. 一次经验机制抽取与跨领域结构迁移 -->
+          <div class="card" style="padding:16px;">
+            <div class="card-title" style="margin-bottom:4px;">一次经验机制获取与跨领域结构迁移 (A3)</div>
+            <div class="card-desc" style="margin-bottom:12px;">单样本抽取 Preconditions / Invariants / Operations → 编译可执行 ProcedureIR → 跨领域角色同构映射与反例边界收紧</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;gap:8px;">
+                <input class="input" id="agi-mech-title" placeholder="源机制名称" value="TCP拥塞控制AIMD机制" style="flex:1">
+                <input class="input" id="agi-mech-src" placeholder="源领域" value="computer_network" style="width:130px">
+                <input class="input" id="agi-mech-dst" placeholder="目标领域" value="cognitive_routing" style="width:130px">
+              </div>
+              <textarea class="input" id="agi-mech-text" rows="2">前提条件：当网络链路存在带宽上限且发生数据包超时或重复ACK丢包时。操作步骤：首先将发送窗口加性递增探测可用容量，随后一旦检测到拥塞丢包立即乘性减半窗口以恢复稳态守恒。结果状态：实现吞吐率与公平性的纳什均衡，避免拥塞崩溃。</textarea>
+              <input class="input" id="agi-mech-target" placeholder="目标领域实体描述" value="认知工作区并发槽位调度器：当推理负载过高触发延迟超标时，调节并发激活槽位上限与退避速率">
+              <button class="btn btn-primary" onclick="runAgiOneShot()">抽取 ProcedureIR 并跨领域迁移</button>
+              <pre id="agi-mech-out" style="margin:6px 0 0;padding:10px;background:var(--bg-2);border-radius:6px;font-size:11px;max-height:180px;overflow:auto;white-space:pre-wrap;">等待执行...</pre>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px;margin-bottom:16px;">
+          <!-- 3. 全链路 AGI 认知合议与最小修复 DAG -->
+          <div class="card" style="padding:16px;">
+            <div class="card-title" style="margin-bottom:4px;">全链路认知合议 · 语义合同 · 多智能体社会 (A1/A5/A6/A7)</div>
+            <div class="card-desc" style="margin-bottom:12px;">DAO 阴阳路由 + 语义合同检验与最小修复 DAG + GWT 点火 + MME 校准合议 + 合同网盲审与 Shapley 分配</div>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              <input class="input" id="agi-delib-q" placeholder="输入复杂推理指令或带约束问题..." value="请解释非Transformer阴阳双态原型路由如何避免表征坍缩，并给出良心稳态公式与睡眠巩固步骤" style="flex:1">
+              <button class="btn btn-primary" onclick="runAgiDeliberate()">发起全链路合议</button>
+            </div>
+            <pre id="agi-delib-out" style="margin:0;padding:10px;background:var(--bg-2);border-radius:6px;font-size:11px;max-height:220px;overflow:auto;white-space:pre-wrap;">等待发起合议...</pre>
+          </div>
+
+          <!-- 4. V20 八大行动 SHA-256 证据链账本 -->
+          <div class="card" style="padding:16px;">
+            <div class="card-title" style="margin-bottom:4px;">V20 八大行动 SHA-256 证据链账本与惊奇队列</div>
+            <div class="card-desc" style="margin-bottom:12px;">不可篡改 prev_hash → pack_hash 链式证据包 · 实时认知惊奇求知队列</div>
+            <div id="agi-ledger-box" style="font-size:12px;max-height:260px;overflow:auto;">加载中...</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1616,7 +1690,7 @@ const PERC_DIM_DEFAULT = 512;
 const CONCEPT_DIM_DEFAULT = 512;
 const TASK_CLASS = { consolidate_sentence_corpus:"consolidate", consolidate_web_corpus:"consolidate", consolidate_vision_corpus:"vision", vision_index:"vision", retrain_classify:"retrain", retrain_classify_reject:"retrain", brain_growth:"retrain" };
 const HEM_LABEL = { left:"左脑", right:"右脑", both:"双脑会诊", left_fallback:"右→左 兜底", right_fallback:"左→右 兜底" };
-const TAB_LABEL = { overview:"概览", chat:"对话测试", learning:"学习流水线", thinking:"思维语料", web_corpus:"网络抓取", sentence_corpus:"训练语料", vision_corpus:"视觉语料", memory:"记忆库" };
+const TAB_LABEL = { overview:"概览", chat:"对话测试", learning:"学习流水线", thinking:"思维语料", web_corpus:"网络抓取", sentence_corpus:"训练语料", vision_corpus:"视觉语料", agi:"AGI 认知中枢", memory:"记忆库" };
 
 // =================================================================
 // 工具
@@ -1671,6 +1745,7 @@ function goto(tab) {
   if (tab === "web_corpus") loadWeb(1);
   if (tab === "sentence_corpus") loadSent(1);
   if (tab === "vision_corpus") loadVis(1);
+  if (tab === "agi") loadAgiCenter();
   if (tab === "memory") loadMem(1);
 }
 navItems.forEach(t => t.addEventListener("click", () => goto(t.dataset.tab)));
@@ -2644,6 +2719,166 @@ document.addEventListener("keydown", e => {
   if (e.key === "Enter" && document.activeElement &&
       document.activeElement.id === "tk-q") loadThinking(1);
 });
+
+// =================================================================
+// 大兮 AGI 认知中枢 (V20)
+// =================================================================
+async function loadAgiCenter() {
+  let st;
+  try {
+    st = await fetch("/api/agi/status").then(r => r.json());
+  } catch (e) {
+    console.error(e);
+    return;
+  }
+  const dao = st.dao_core || {};
+  const gr = st.multimodal_graph || {};
+  const ws = st.global_workspace_recent || [];
+  const soc = st.cognitive_society || {};
+  const v20 = st.v20_evidence_ledger || {};
+  const sp = st.surprise_stats || {};
+
+  const cardsHtml = `
+    <div class="stat-card brand">
+      <div class="stat-head">
+        <div class="stat-label">DAO 阴阳原型路由</div>
+        <div class="icon-tile brand">${ico("i-brain")}</div>
+      </div>
+      <div class="stat-num">${fmtNum(dao.n_prototypes || 128)} <small style="font-size:13px;opacity:0.7">Top-${dao.top_k || 8}</small></div>
+      <div class="stat-sub">
+        <span class="pill">良心熵 ${(dao.usage_entropy || 0).toFixed(3)}</span>
+        <span class="pill">阴 ${(dao.yin_mean || 0).toFixed(2)} / 阳 ${(dao.yang_mean || 0).toFixed(2)}</span>
+        <span class="pill">海马体 ${fmtNum(dao.episodic_buffer_size || 0)}</span>
+      </div>
+    </div>
+    <div class="stat-card cyan">
+      <div class="stat-head">
+        <div class="stat-label">万物皆可图属性图谱</div>
+        <div class="icon-tile cyan">${ico("i-globe")}</div>
+      </div>
+      <div class="stat-num">${fmtNum(gr.total_nodes || gr.nodes || 0)} <small style="font-size:13px;opacity:0.7">节点</small></div>
+      <div class="stat-sub">
+        <span class="pill">有向边 ${fmtNum(gr.total_edges || gr.edges || 0)}</span>
+        <span class="pill">机制 IR ${fmtNum(st.procedures_count || 0)}</span>
+        <span class="pill">Hash ${escape((gr.graph_hash || "").slice(0, 8))}</span>
+      </div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-head">
+        <div class="stat-label">全局工作区 & 惊奇守卫</div>
+        <div class="icon-tile amber">${ico("i-zap")}</div>
+      </div>
+      <div class="stat-num">${fmtNum(ws.length || 0)} <small style="font-size:13px;opacity:0.7">近期点火</small></div>
+      <div class="stat-sub">
+        <span class="pill">惊奇均值 ${(sp.surprise_ema || 0).toFixed(3)}</span>
+        <span class="pill">待学缺口 ${fmtNum((sp.pending_queue || []).filter(x => x.status === 'pending').length)}</span>
+      </div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-head">
+        <div class="stat-label">V20 链式证据账本</div>
+        <div class="icon-tile green">${ico("i-check")}</div>
+      </div>
+      <div class="stat-num">${escape(v20.actions_covered || "0/8")}</div>
+      <div class="stat-sub">
+        <span class="pill">记录 ${fmtNum(v20.total_records || 0)}</span>
+        <span class="pill">完整性 ${v20.chain_integrity ? "PASS" : "FAIL"}</span>
+        <span class="pill">#${escape((v20.head_hash || "").slice(0, 8))}</span>
+      </div>
+    </div>
+  `;
+  const box = document.getElementById("agi-stat-cards");
+  if (box) box.innerHTML = cardsHtml;
+
+  const ledgerEl = document.getElementById("agi-ledger-box");
+  if (ledgerEl) {
+    const packs = (v20.recent_packs || []).slice().reverse().map(p => `
+      <div style="padding:6px 8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:8px;">
+        <span><b>#${p.seq}</b> <span class="lp-chip brand">${escape(p.action_id)}</span> ${escape(p.subject)}</span>
+        <span style="font-family:var(--font-mono);color:var(--fg-3);font-size:11px;">${escape(p.prev_hash.slice(0,6))}→${escape(p.pack_hash.slice(0,8))}</span>
+      </div>
+    `).join("");
+    const gaps = (sp.pending_queue || []).slice(0, 6).map(g => `
+      <span class="lp-chip ${g.status === 'learned' ? 'green' : 'amber'}" style="margin-right:4px;">
+        ${escape(g.topic)} (S=${g.surprise_score}, ${escape(g.status)})
+      </span>
+    `).join("");
+    ledgerEl.innerHTML = `
+      <div style="margin-bottom:8px;"><b>惊奇求知队列：</b>${gaps || '<span style="color:var(--fg-3)">暂无待求知高惊奇概念</span>'}</div>
+      <div><b>最近 SHA-256 证据包：</b></div>
+      <div style="margin-top:4px;border:1px solid var(--border);border-radius:6px;">${packs || '<div style="padding:8px;color:var(--fg-3)">暂无记录</div>'}</div>
+    `;
+  }
+}
+
+async function runAgiAcquire(forceNet) {
+  const topic = document.getElementById("agi-acq-topic").value.trim();
+  const content = forceNet ? "" : document.getElementById("agi-acq-content").value.trim();
+  const out = document.getElementById("agi-acq-out");
+  out.textContent = "正在执行多源采集、跨源互证投票与认知免疫入脑...";
+  try {
+    const r = await fetch("/api/agi/autonomous_acquire", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({topic, content: content || null, allow_network: true})
+    }).then(x => x.json());
+    out.textContent = JSON.stringify(r, null, 2);
+    toast(r.ok ? `已学习并织入图谱：${topic}` : `未入脑：${r.reason || r.error}`, r.ok ? "success" : "error");
+    loadAgiCenter();
+  } catch (e) {
+    out.textContent = "请求失败: " + e;
+  }
+}
+
+async function runAgiOneShot() {
+  const title = document.getElementById("agi-mech-title").value.trim();
+  const source_domain = document.getElementById("agi-mech-src").value.trim();
+  const target_domain = document.getElementById("agi-mech-dst").value.trim();
+  const experience_text = document.getElementById("agi-mech-text").value.trim();
+  const target_description = document.getElementById("agi-mech-target").value.trim();
+  const out = document.getElementById("agi-mech-out");
+  out.textContent = "正在抽取因果机制签名并编译 ProcedureIR...";
+  try {
+    const r = await fetch("/api/agi/one_shot_learn", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({title, experience_text, source_domain, target_domain, target_description})
+    }).then(x => x.json());
+    out.textContent = JSON.stringify(r, null, 2);
+    toast(`已生成机制 ${r.procedure_ir?.ir_id || ''} 并完成结构迁移`, "success");
+    loadAgiCenter();
+  } catch (e) {
+    out.textContent = "请求失败: " + e;
+  }
+}
+
+async function runAgiDeliberate() {
+  const query = document.getElementById("agi-delib-q").value.trim();
+  const out = document.getElementById("agi-delib-out");
+  out.textContent = "正在执行 DAO 阴阳路由、语义合同校验、GWT 点火与多智能体社会盲审...";
+  try {
+    const r = await fetch("/api/agi/deliberate", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({query})
+    }).then(x => x.json());
+    out.textContent = JSON.stringify(r, null, 2);
+    toast("全链路认知合议完成", "success");
+    loadAgiCenter();
+  } catch (e) {
+    out.textContent = "请求失败: " + e;
+  }
+}
+
+async function runAgiSleep() {
+  try {
+    const r = await fetch("/api/agi/sleep_consolidate", {method: "POST"}).then(x => x.json());
+    toast(`睡眠重放巩固完成：重放 ${r.replayed || 0} 条情景，良心熵比 ${(r.usage_entropy_ratio || 0).toFixed(3)}`, "success");
+    loadAgiCenter();
+  } catch (e) {
+    toast("睡眠巩固失败: " + e, "error");
+  }
+}
 
 // =================================================================
 // 启动 + 自动刷新

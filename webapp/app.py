@@ -29,8 +29,13 @@ from fastapi import FastAPI, Query, HTTPException, UploadFile, File, Form, Reque
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel
 
-import grpc
-from chatbot_grpc import chatbot_pb2, chatbot_pb2_grpc
+try:
+    import grpc
+    from chatbot_grpc import chatbot_pb2, chatbot_pb2_grpc
+except ImportError:
+    grpc = None
+    chatbot_pb2 = None
+    chatbot_pb2_grpc = None
 from webapp import auth
 
 app = FastAPI(title="Cognitive Brain Dashboard")
@@ -960,3 +965,115 @@ def brain_test(q: str = Query(..., min_length=1)):
             for m, sim, cred in results
         ],
     }
+
+
+# =====================================================================
+# 大兮 AGI (DAXY AGI V20) 认知中枢 API
+# =====================================================================
+class AgiDeliberateReq(BaseModel):
+    query: str
+    auto_acquire_on_surprise: Optional[bool] = False
+
+
+class AgiOneShotReq(BaseModel):
+    title: str
+    experience_text: str
+    source_domain: Optional[str] = "software_engineering"
+    target_domain: Optional[str] = None
+    target_description: Optional[str] = None
+    role_overrides: Optional[dict] = None
+    counterexample: Optional[str] = None
+
+
+class AgiAcquireReq(BaseModel):
+    topic: str
+    custom_content: Optional[str] = None
+    content: Optional[str] = None
+    allow_network: Optional[bool] = True
+    persist_pg: Optional[bool] = True
+
+
+class AgiSleepReq(BaseModel):
+    n_replay: int = 32
+    lr: float = 0.03
+
+
+@app.get("/api/agi/status")
+def agi_status():
+    """大兮 AGI 认知引擎全景状态(毫秒级,无需阻塞加载大体积 pkl)"""
+    from brain.daxy_agi_core import get_agi_engine
+    eng = get_agi_engine(brain=_brain)
+    return eng.status()
+
+
+@app.post("/api/agi/deliberate")
+def agi_deliberate(req: AgiDeliberateReq):
+    """触发大兮 AGI 全链路深度认知推演:
+    语义合同 -> 全局工作区竞争点火 -> 阴阳双态 DAO 核心 -> MME 校准合议 & 认知社会盲审/Shapley -> 最小修复 DAG"""
+    if not req.query or not req.query.strip():
+        raise HTTPException(400, "empty query")
+    from brain.daxy_agi_core import get_agi_engine
+    try:
+        b = _get_brain()
+    except Exception:
+        b = None
+    eng = get_agi_engine(brain=b)
+    return eng.deliberate(
+        query=req.query.strip(),
+        auto_acquire_on_surprise=bool(req.auto_acquire_on_surprise),
+    )
+
+
+@app.post("/api/agi/one_shot_learn")
+def agi_one_shot_learn(req: AgiOneShotReq):
+    """单样本因果机制获取 + 跨领域结构同构迁移 + 反例边界收紧"""
+    if not req.title.strip() or not req.experience_text.strip():
+        raise HTTPException(400, "title and experience_text are required")
+    from brain.daxy_agi_core import get_agi_engine
+    eng = get_agi_engine(brain=_brain)
+    return eng.one_shot_learn_and_transfer(
+        title=req.title.strip(),
+        experience_text=req.experience_text.strip(),
+        source_domain=req.source_domain or "software_engineering",
+        target_domain=req.target_domain.strip() if req.target_domain else None,
+        role_overrides=req.role_overrides,
+        counterexample=req.counterexample.strip() if req.counterexample else None,
+    )
+
+
+@app.post("/api/agi/autonomous_acquire")
+def agi_autonomous_acquire(req: AgiAcquireReq):
+    """触发惊奇驱动自主多源采集、跨源互证投票、认知免疫反污染、图谱织入与 DAO 巩固"""
+    if not req.topic.strip():
+        raise HTTPException(400, "topic is required")
+    from brain.daxy_agi_core import get_agi_engine
+    try:
+        b = _get_brain()
+    except Exception:
+        b = None
+    eng = get_agi_engine(brain=b)
+    res = eng.learner.acquire_and_learn(
+        topic=req.topic.strip(),
+        agi_engine=eng,
+        custom_content=req.custom_content or req.content,
+        allow_network=bool(req.allow_network),
+        persist_pg=bool(req.persist_pg),
+    )
+    eng.save_state()
+    if b is not None and res.get("ok"):
+        try:
+            b.save()
+        except Exception:
+            pass
+    return res
+
+
+@app.post("/api/agi/sleep_consolidate")
+def agi_sleep_consolidate(req: Optional[AgiSleepReq] = None):
+    """手动触发一次海马体->皮层三因子睡眠重放巩固与原型结构分裂/合并"""
+    from brain.daxy_agi_core import get_agi_engine
+    eng = get_agi_engine(brain=_brain)
+    nr = req.n_replay if req else 32
+    lr = req.lr if req else 0.03
+    return eng.run_sleep_consolidation(n_replay=nr, lr=lr)
+

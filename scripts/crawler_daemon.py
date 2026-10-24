@@ -291,18 +291,10 @@ def record_failed_topic(topic, status):
 
 
 def discover_new_topics(cur, max_new=20):
-    """从 web_corpus 已学到的内容里抽名词。新版:
-    - 一半来自 jieba 切词(只收 3+ 字, 黑名单过滤)
-    - 一半直接复用其他 learned topic(已验证存在,质量高)
+    """从 thinking_gaps (认知惊奇缺口) 与 web_corpus 已学内容里发现新主题:
+    1) 优先消费高惊奇度的未知概念 (thinking_gaps status='pending')
+    2) 其次从已学百科文本通过 jieba 切出 3+ 字高质量实体名词
     """
-    cur.execute(
-        "SELECT content, topic FROM web_corpus WHERE status='learned' "
-        "ORDER BY RANDOM() LIMIT 50"
-    )
-    rows = cur.fetchall()
-    contents = [r[0] for r in rows]
-    learned_topics = [r[1] for r in rows if r[1]]
-
     cur.execute(
         "SELECT topic FROM web_corpus "
         "UNION SELECT topic FROM sentence_corpus "
@@ -312,6 +304,32 @@ def discover_new_topics(cur, max_new=20):
 
     candidates = []
     seen = set()
+
+    # 0) 优先提取认知惊奇缺口 (Surprise-Driven Curiosity Queue)
+    try:
+        cur.execute(
+            "SELECT query FROM thinking_gaps WHERE status='pending' "
+            "ORDER BY hits DESC, last_seen DESC LIMIT 15"
+        )
+        for (q_txt,) in cur.fetchall():
+            if not q_txt:
+                continue
+            cleaned = q_txt.replace("是什么", "").replace("？", "").replace("?", "").strip()
+            if _good_candidate(cleaned, existing) and cleaned not in seen:
+                seen.add(cleaned)
+                candidates.append(cleaned)
+                if len(candidates) >= max(4, max_new // 3):
+                    break
+    except Exception:
+        pass
+
+    cur.execute(
+        "SELECT content, topic FROM web_corpus WHERE status='learned' "
+        "ORDER BY RANDOM() LIMIT 50"
+    )
+    rows = cur.fetchall()
+    contents = [r[0] for r in rows]
+    learned_topics = [r[1] for r in rows if r[1]]
 
     # 1) jieba 切词 - 仅高质量候选
     for c in contents:

@@ -1380,6 +1380,10 @@ class CognitiveBrain:
                 hem = f"{other}_fallback"
 
         if not results:
+            try:
+                self.agi.observe_query_fast(prompt, None, 0.0, None, hem)
+            except Exception:
+                pass
             return None, {"reason": "empty_memory", "hemisphere": hem}
 
         # 字符 2-gram gate(排除疑问/虚词 bigram):
@@ -1401,6 +1405,10 @@ class CognitiveBrain:
                           if _substantive_overlap(prompt, m.get("topic", ""))]
                 if not recall:
                     top_mem_orig, top_sim_orig, _ = results[0]
+                    try:
+                        self.agi.observe_query_fast(prompt, top_mem_orig.get("key"), float(top_sim_orig) * 0.4, None, hem)
+                    except Exception:
+                        pass
                     return None, {"reason": "no_topic_overlap",
                                   "top_sim": top_sim_orig,
                                   "top_topic": top_mem_orig["topic"],
@@ -1413,6 +1421,10 @@ class CognitiveBrain:
         # 接受较低 sim(BRAIN 创造性下限);主路径 SDR 命中仍要满足主阈值。
         min_sim = BRAIN_CREATIVE_MIN if used_recall_fallback else sim_threshold
         if top_sim < min_sim:
+            try:
+                self.agi.observe_query_fast(prompt, top_mem.get("key"), float(top_sim), top_mem.get("topic"), hem)
+            except Exception:
+                pass
             return None, {"reason": "below_threshold", "top_sim": top_sim,
                           "top_topic": top_mem["topic"], "hemisphere": hem}
 
@@ -1440,6 +1452,14 @@ class CognitiveBrain:
         top_mem["credibility"] = min(1.0, top_mem["credibility"] + 0.005)
         self._sync_cred(top_mem)  # 同步进 cred 缓存向量
 
+        agi_meta = {}
+        try:
+            agi_meta = self.agi.observe_query_fast(
+                prompt, top_mem.get("key"), float(top_sim), top_mem.get("topic"), hem
+            )
+        except Exception:
+            pass
+
         return top_mem["content"], {
             "topic": top_mem["topic"],
             "source": top_mem["source"],
@@ -1448,6 +1468,7 @@ class CognitiveBrain:
             "hemisphere": hem,
             "sampled": do_sample,
             "alternatives": [(m["topic"], s) for m, s, _ in results[1:3]],
+            "agi": agi_meta,
         }
 
 
@@ -1550,9 +1571,38 @@ class CognitiveBrain:
             if buf is not None and i < filled and buf.shape[1] == self.assoc_dim:
                 buf[i] = new_keys[j]
                 self._key_norm_buf[i] = np.linalg.norm(new_keys[j]) + 1e-8
+            try:
+                self.agi.dao_core.step(
+                    new_keys[j],
+                    prediction_error=max(0.0, 1.0 - float(m.get("credibility", 0.7))),
+                    learn=True,
+                    topic_label=m.get("topic", ""),
+                )
+                self.agi.graph.ingest_knowledge_passage(
+                    topic=m.get("topic", ""),
+                    content=m.get("content", ""),
+                    source=m.get("source", "consolidate"),
+                    credibility=float(m.get("credibility", 0.7)),
+                    meta=m.get("meta"),
+                )
+            except Exception:
+                pass
+        try:
+            self.agi.run_sleep_consolidation(n_replay=min(16, len(batch)), lr=0.02)
+        except Exception:
+            pass
         # keys 原位变更,CSR 镜像失效
         self._keys_version = getattr(self, "_keys_version", 0) + 1
         return len(batch)
+
+    @property
+    def agi(self):
+        eng = getattr(self, "_agi_engine", None)
+        if eng is None:
+            from brain.daxy_agi_core import get_agi_engine
+            eng = get_agi_engine(brain=self)
+            self._agi_engine = eng
+        return eng
 
     def decay_unused(self, max_seconds=86400 * 30):
         """长时间未命中的记忆可信度缓慢降低(模拟遗忘)"""
@@ -1574,6 +1624,17 @@ class CognitiveBrain:
         feature_count = 0
         if hasattr(self, "feature_index") and self.feature_index:
             feature_count = len(self.feature_index)
+        dao_info = {}
+        try:
+            dao_info = {
+                "dao_prototypes": self.agi.dao_core.cfg.n_prototypes,
+                "dao_usage_entropy": round(self.agi.dao_core.usage_entropy(), 4),
+                "multimodal_graph_nodes": len(self.agi.graph.nodes),
+                "multimodal_graph_edges": len(self.agi.graph.edges),
+                "procedures_count": len(self.agi.procedures),
+            }
+        except Exception:
+            pass
         return {
             "neurons": PERC_DIM + self.assoc_dim + CONCEPT_DIM,
             "perception_dim": PERC_DIM,
@@ -1590,5 +1651,6 @@ class CognitiveBrain:
             "vocab": len(self.perc_sdr),
             "steps": self.steps,
             "W1_density": float((self.W1 > 0.01).mean()),
+            **dao_info,
         }
 
