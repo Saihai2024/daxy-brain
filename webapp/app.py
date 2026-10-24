@@ -1013,11 +1013,7 @@ def agi_deliberate(req: AgiDeliberateReq):
     if not req.query or not req.query.strip():
         raise HTTPException(400, "empty query")
     from brain.daxy_agi_core import get_agi_engine
-    try:
-        b = _get_brain()
-    except Exception:
-        b = None
-    eng = get_agi_engine(brain=b)
+    eng = get_agi_engine(brain=_brain)
     return eng.deliberate(
         query=req.query.strip(),
         auto_acquire_on_surprise=bool(req.auto_acquire_on_surprise),
@@ -1047,11 +1043,7 @@ def agi_autonomous_acquire(req: AgiAcquireReq):
     if not req.topic.strip():
         raise HTTPException(400, "topic is required")
     from brain.daxy_agi_core import get_agi_engine
-    try:
-        b = _get_brain()
-    except Exception:
-        b = None
-    eng = get_agi_engine(brain=b)
+    eng = get_agi_engine(brain=_brain)
     res = eng.learner.acquire_and_learn(
         topic=req.topic.strip(),
         agi_engine=eng,
@@ -1060,9 +1052,9 @@ def agi_autonomous_acquire(req: AgiAcquireReq):
         persist_pg=bool(req.persist_pg),
     )
     eng.save_state()
-    if b is not None and res.get("ok"):
+    if _brain is not None and res.get("ok"):
         try:
-            b.save()
+            _brain.save()
         except Exception:
             pass
     return res
