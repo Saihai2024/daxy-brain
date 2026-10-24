@@ -10,8 +10,20 @@ webapp/.session_secret
 *.bin
 *.vec
 *.ckpt
-*/models/
-corpus/
+*/models/*
+!brain/models/ws_input.pkl
+!brain/models/ws_target.pkl
+!dnnsort/models/ws.pkl
+corpus/*
+!corpus/stopwords.txt
+!corpus/keywords.txt
+!corpus/recall/
+corpus/recall/*
+!corpus/recall/qa_dict.json
+!corpus/knowledge/
+corpus/knowledge/*
+!corpus/knowledge/concept_dict.json
+!corpus/knowledge/credibility_rank.csv
 db/data/
 
 # ---- 运行产物 ----
