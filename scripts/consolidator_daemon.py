@@ -17,6 +17,7 @@ load brain.pkl 拿到新记忆。后续可改为定期 SIGHUP 触发热重载。
 """
 import argparse
 import os
+import re
 import sys
 import time
 from pathlib import Path
