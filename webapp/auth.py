@@ -13,6 +13,9 @@ import os
 import secrets
 import time
 from pathlib import Path
+from utils.db_config import load_dotenv_if_present
+
+load_dotenv_if_present()
 
 AUTH_USER = os.environ.get("DASH_USER", "root")
 AUTH_PASS = os.environ.get("DASH_PASS", "")

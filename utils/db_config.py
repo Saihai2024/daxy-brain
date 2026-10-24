@@ -1,6 +1,29 @@
-"""数据库连接(MySQL legacy + PostgreSQL primary,可用 env vars 覆盖)"""
+"""数据库连接(MySQL legacy + PostgreSQL primary,可用 env vars 或项目根 .env 覆盖)"""
 import os
-import pymysql
+from pathlib import Path
+
+
+def load_dotenv_if_present():
+    env_file = Path(__file__).resolve().parent.parent / ".env"
+    if not env_file.is_file():
+        return
+    try:
+        for raw in env_file.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            k = k.strip()
+            v = v.strip()
+            if len(v) >= 2 and v[0] == v[-1] and v[0] in ("'", '"'):
+                v = v[1:-1]
+            if k:
+                os.environ.setdefault(k, v)
+    except Exception:
+        pass
+
+
+load_dotenv_if_present()
 
 DB_CONFIG = {
     'host': os.environ.get('MYSQL_HOST', 'localhost'),
@@ -18,6 +41,7 @@ PG_DSN = os.environ.get(
 
 
 def get_mysql_conn(with_db=True):
+    import pymysql
     config = DB_CONFIG.copy()
     if not with_db:
         config.pop('database', None)

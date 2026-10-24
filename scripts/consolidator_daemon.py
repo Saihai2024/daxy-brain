@@ -211,6 +211,52 @@ def run_pass(brain, args):
             "hebbian_steps": hebbian_steps}
 
 
+def _is_pid_alive(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    if os.name == "nt":
+        import ctypes
+        PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+        STILL_ACTIVE = 259
+        h = ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, int(pid))
+        if not h:
+            return False
+        try:
+            code = ctypes.c_ulong()
+            ok = ctypes.windll.kernel32.GetExitCodeProcess(h, ctypes.byref(code))
+            return bool(ok and code.value == STILL_ACTIVE)
+        finally:
+            ctypes.windll.kernel32.CloseHandle(h)
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+def _check_reload_lock(reload_lock: Path, max_age_sec: float = 7200.0) -> bool:
+    """检查 reload_lock 是否有效;若持有锁的 PID 已退出或锁超时则自动清理陈旧锁。"""
+    if not reload_lock.exists():
+        return False
+    try:
+        age = time.time() - reload_lock.stat().st_mtime
+        txt = reload_lock.read_text(encoding="utf-8", errors="replace")
+        m = re.search(r"pid\s*=\s*(\d+)", txt)
+        if m:
+            pid = int(m.group(1))
+            if not _is_pid_alive(pid):
+                LOG.warning(f"[daemon] removing stale reload lock (dead pid={pid}, age={age:.0f}s)")
+                reload_lock.unlink(missing_ok=True)
+                return False
+        if age > max_age_sec:
+            LOG.warning(f"[daemon] removing expired reload lock (age={age:.0f}s > {max_age_sec:.0f}s)")
+            reload_lock.unlink(missing_ok=True)
+            return False
+    except Exception as e:
+        LOG.warning(f"[daemon] reload lock inspect error: {e}")
+    return reload_lock.exists()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--interval", type=float, default=60.0,
@@ -235,7 +281,7 @@ def main():
     reload_lock = ROOT / "logs" / "BRAIN_RELOAD_IN_PROGRESS"
 
     while True:
-        if reload_lock.exists():
+        if _check_reload_lock(reload_lock):
             LOG.warning(f"[daemon] reload lock present ({reload_lock.name}), "
                         f"sleeping {args.interval}s without touching brain")
             time.sleep(args.interval)

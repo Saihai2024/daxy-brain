@@ -64,12 +64,41 @@ ROOT = Path(__file__).resolve().parent
 LOG_DIR = ROOT / "logs"
 LOG_DIR.mkdir(exist_ok=True)
 
+
+def _load_dotenv():
+    env_file = ROOT / ".env"
+    if not env_file.is_file():
+        return
+    try:
+        for raw in env_file.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            k = k.strip()
+            v = v.strip()
+            if len(v) >= 2 and v[0] == v[-1] and v[0] in ("'", '"'):
+                v = v[1:-1]
+            if k:
+                os.environ.setdefault(k, v)
+    except Exception:
+        pass
+
+
+_load_dotenv()
+
 # 全部可用环境变量覆盖(见 .env.example);默认取当前解释器 / 交给 PATH。
 PYTHON = os.environ.get("BRAIN_PYTHON") or sys.executable
-# 思维链守护跑在另一套依赖里(DrissionPage 等),脚本也在本仓库之外,
-# 所以默认不启用 —— 只有同时配了 THINKING_PYTHON 和 THINKING_DAEMON 才会拉起。
-THINKING_PYTHON = os.environ.get("THINKING_PYTHON", "")
-THINKING_DAEMON = os.environ.get("THINKING_DAEMON", "")
+WEB_HOST = os.environ.get("WEB_HOST", "127.0.0.1")
+WEB_PORT = int(os.environ.get("WEB_PORT", "8000"))
+GRPC_PORT = int(os.environ.get("GRPC_PORT", "9999"))
+# 思维链守护支持外部环境(THINKING_PYTHON + THINKING_DAEMON)或本仓库内置
+# scripts/thinking_daemon.py(当配置了 THINKING_LLM_URL 时自动启用)。
+THINKING_LLM_URL = os.environ.get("THINKING_LLM_URL", "")
+THINKING_PYTHON = os.environ.get("THINKING_PYTHON", "") or (PYTHON if THINKING_LLM_URL else "")
+THINKING_DAEMON = os.environ.get("THINKING_DAEMON", "") or (
+    str(ROOT / "scripts" / "thinking_daemon.py") if THINKING_LLM_URL else ""
+)
 PGSQL_BIN = os.environ.get("PGSQL_BIN", "")
 PGSQL_DATA = os.environ.get("PGSQL_DATA", "")
 FFMPEG_DIR = os.environ.get("FFMPEG_DIR", "")
@@ -81,16 +110,16 @@ SERVICES = [
         "name": "grpc",
         "label": "gRPC 大脑",
         "cmd": [PYTHON, "-u", "grpc_predict.py"],
-        "port": 9999,
-        "ready_marker": "listening on :9999",
+        "port": GRPC_PORT,
+        "ready_marker": f"listening on :{GRPC_PORT}",
     },
     {
         "name": "fastapi",
         "label": "FastAPI 仪表盘",
         "cmd": [PYTHON, "-m", "uvicorn", "webapp.app:app",
-                "--host", "127.0.0.1", "--port", "8000",
+                "--host", WEB_HOST, "--port", str(WEB_PORT),
                 "--log-level", "info"],
-        "port": 8000,
+        "port": WEB_PORT,
         "ready_marker": "Application startup complete",
     },
     {
@@ -193,9 +222,10 @@ def kill_pid(pid):
 
 
 def precheck_ports(reset=False):
-    """检查 8000 / 9999 是否被占。如 reset=True 杀掉旧进程。"""
+    """检查 WEB_PORT / GRPC_PORT 是否被占。如 reset=True 杀掉旧进程。"""
+    ports = (WEB_PORT, GRPC_PORT)
     conflicts = []
-    for port in (8000, 9999):
+    for port in ports:
         if is_port_open(port):
             pid = find_pid_on_port(port)
             conflicts.append((port, pid))
@@ -211,7 +241,7 @@ def precheck_ports(reset=False):
                 print(f"    ✓ killed pid={pid}")
         time.sleep(2)
         # 重新检查
-        still = [p for p in (8000, 9999) if is_port_open(p)]
+        still = [p for p in ports if is_port_open(p)]
         if still:
             print(f"  ✗ 仍占用: {still}")
             return False
@@ -258,6 +288,8 @@ def make_env():
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "utf-8"
     env["PYTHONUNBUFFERED"] = "1"
+    env.setdefault("GRPC_PORT", str(GRPC_PORT))
+    env.setdefault("GRPC_TARGET", f"127.0.0.1:{GRPC_PORT}")
     # 关键:直接用 env 里的 python.exe(未 activate)时,conda 环境的
     # Library\bin 不在 PATH 上,numpy 的 BLAS DLL 延迟加载会失败,
     # 矩阵乘法直接段错误(Windows 0xC06D007F = ERROR_MOD_NOT_FOUND)。
@@ -474,8 +506,8 @@ def main():
     print("  ✓ 全部就绪")
     print("=" * 60)
     print()
-    print("  📊 仪表盘: http://127.0.0.1:8000")
-    print("  🔌 gRPC:   127.0.0.1:9999")
+    print(f"  📊 仪表盘: http://{WEB_HOST}:{WEB_PORT}")
+    print(f"  🔌 gRPC:   127.0.0.1:{GRPC_PORT}")
     print("  🗄  PG:     127.0.0.1:5432")
     print()
     print("  日志文件:")

@@ -17,6 +17,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from utils.db_config import get_pg_conn, load_dotenv_if_present
+load_dotenv_if_present()
+
 # 把 ffmpeg 加进 PATH(Whisper 转码音频要)
 FFMPEG_DIR = os.environ.get("FFMPEG_DIR", "")
 if FFMPEG_DIR and os.path.isdir(FFMPEG_DIR):
@@ -28,7 +31,6 @@ from pydantic import BaseModel
 
 import grpc
 from chatbot_grpc import chatbot_pb2, chatbot_pb2_grpc
-from utils.db_config import get_pg_conn
 from webapp import auth
 
 app = FastAPI(title="Cognitive Brain Dashboard")

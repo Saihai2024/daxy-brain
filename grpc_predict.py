@@ -497,11 +497,12 @@ class ChatServicer(chatbot_pb2_grpc.ChatBotServiceServicer):
 
 
 def serve():
+    grpc_port = int(os.environ.get("GRPC_PORT", "9999"))
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     chatbot_pb2_grpc.add_ChatBotServiceServicer_to_server(ChatServicer(), server)
-    server.add_insecure_port("[::]:9999")
+    server.add_insecure_port(f"[::]:{grpc_port}")
     server.start()
-    print("gRPC ChatBotService listening on :9999")
+    print(f"gRPC ChatBotService listening on :{grpc_port}")
     try:
         while True:
             time.sleep(3600)
