@@ -27,8 +27,12 @@ sys.path.insert(0, str(ROOT))
 
 from utils.db_config import get_pg_conn
 from utils.log_setup import setup_daemon_logger
-from brain.cognitive_brain import CognitiveBrain
-from brain.credibility import score as credibility_score
+try:
+    from brain.cognitive_brain import CognitiveBrain
+    from brain.credibility import score as credibility_score
+except ImportError:
+    from chatbot.cognitive_brain import CognitiveBrain
+    from chatbot.credibility import score as credibility_score
 
 LOG = setup_daemon_logger("consolidator")
 
